@@ -1,0 +1,72 @@
+@page "/ingredients"
+@inject HttpClient Http
+
+<h3>Ingredients</h3>
+
+<!-- Search Bar -->
+<input @bind="SearchText" placeholder="Search ingredients..." />
+<select @bind="SortOption">
+    <option value="A-Z">Sort A-Z</option>
+    <option value="Z-A">Sort Z-A</option>
+</select>
+
+<div class="ingredient-grid">
+    @foreach (var ingredient in FilteredIngredients)
+    {
+        <div class="ingredient-card">
+            <img src="@ingredient.ImageUrl" alt="@ingredient.Name" style="width: 100px; height: 100px;" />
+            <p>@ingredient.Name</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Ingredient> ingredientList = new(); // Renamed variable
+    private List<Ingredient> FilteredIngredients => GetFilteredIngredients();
+    private string SearchText = "";
+    private string SortOption = "A-Z";
+
+    // Fetch data on initialization
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetFromJsonAsync<IngredientApiResponse>("https://www.themealdb.com/api/json/v1/1/list.php?i=list");
+        ingredientList = response?.Meals.Select(meal => new Ingredient
+        {
+            Name = meal.strIngredient,
+            ImageUrl = $"https://www.themealdb.com/images/ingredients/{meal.strIngredient}-Small.png"
+        }).ToList() ?? new List<Ingredient>();
+    }
+
+    // Filter and sort ingredients
+    private List<Ingredient> GetFilteredIngredients()
+    {
+        var filtered = ingredientList
+            .Where(i => string.IsNullOrEmpty(SearchText) || i.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (SortOption == "A-Z")
+            return filtered.OrderBy(i => i.Name).ToList();
+        else if (SortOption == "Z-A")
+            return filtered.OrderByDescending(i => i.Name).ToList();
+
+        return filtered;
+    }
+
+    // Ingredient class definition
+    private class Ingredient
+    {
+        public string? Name { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+
+    // API Response class
+    private class IngredientApiResponse
+    {
+        public List<IngredientApiMeal>? Meals { get; set; }
+    }
+
+    private class IngredientApiMeal
+    {
+        public string? strIngredient { get; set; }
+    }
+}
