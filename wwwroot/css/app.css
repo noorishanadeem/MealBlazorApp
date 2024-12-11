@@ -101,3 +101,37 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+
+.meal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.meal-card {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.meal-detail {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.meal-detail img {
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.meal-detail ul {
+    list-style: none;
+    padding: 0;
+}
+
+.meal-detail li {
+    margin: 5px 0;
+}
