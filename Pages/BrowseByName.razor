@@ -1,0 +1,61 @@
+@page "/browse-by-name"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<h3 style="text-align: center;">Browse Meals by Name</h3>
+
+<div style="text-align: center; margin: 20px;">
+    <!-- Alphabet List -->
+    @foreach (var letter in Alphabet)
+    {
+        <button class="btn btn-outline-primary m-1" @onclick="() => FetchMealsByLetter(letter)">
+            @letter
+        </button>
+    }
+</div>
+
+@if (Meals != null && Meals.Count > 0)
+{
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 20px;">
+        @foreach (var meal in Meals)
+        {
+            <div @onclick="() => NavigateToMeal(meal.IdMeal)" 
+                 style="cursor: pointer; text-align: center; border: 1px solid #ddd; padding: 10px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <img src="@meal.StrMealThumb" alt="@meal.StrMeal" style="width: 100%; height: auto; border-radius: 8px;" />
+                <p style="font-weight: bold; margin-top: 10px;">@meal.StrMeal</p>
+            </div>
+        }
+    </div>
+}
+else if (Meals != null)
+{
+    <p style="text-align: center; color: red;">No meals found for this letter.</p>
+}
+
+@code {
+    private List<char> Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray().ToList();
+    private List<Meal> Meals { get; set; } = new();
+
+    private async Task FetchMealsByLetter(char letter)
+    {
+        var response = await HttpClient.GetFromJsonAsync<MealResponse>($"https://www.themealdb.com/api/json/v1/1/search.php?f={letter}");
+        Meals = response?.Meals ?? new List<Meal>();
+    }
+
+    private void NavigateToMeal(string mealId)
+    {
+        NavigationManager.NavigateTo($"/meal/{mealId}");
+    }
+
+    public class MealResponse
+    {
+        public List<Meal>? Meals { get; set; }
+    }
+
+    public class Meal
+    {
+        public string IdMeal { get; set; } = string.Empty;
+        public string StrMeal { get; set; } = string.Empty;
+        public string StrMealThumb { get; set; } = string.Empty;
+    }
+}

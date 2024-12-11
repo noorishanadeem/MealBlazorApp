@@ -1,0 +1,93 @@
+@page "/meal-detail/{MealId}"
+@inject MealService MealService
+@inject NavigationManager NavigationManager
+
+<h3 style="text-align: center; margin-bottom: 20px;">Recipe Details</h3>
+
+@if (Meal != null)
+{
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+
+        <!-- Meal Image -->
+        <img src="@Meal.StrMealThumb" alt="@Meal.StrMeal" 
+             style="width: 400px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
+
+        <!-- Recipe Title -->
+        <h1 style="margin: 10px 0; font-size: 2.2rem;">@Meal.StrMeal</h1>
+
+        <!-- Category and Area -->
+        <p style="font-size: 1.1rem; color: #555;">
+            <strong>Category:</strong> @Meal.StrCategory | 
+            <strong>Area:</strong> @Meal.StrArea
+        </p>
+
+        <!-- Ingredients List -->
+        <div style="width: 60%; margin-top: 20px;">
+            <h3>Ingredients:</h3>
+            <ul style="list-style-type: square; font-size: 1rem;">
+                @foreach (var ingredient in Ingredients)
+                {
+                    <li>@ingredient</li>
+                }
+            </ul>
+        </div>
+
+        <!-- Instructions -->
+        <div style="width: 60%; margin-top: 20px;">
+            <h3>Instructions:</h3>
+            <p style="line-height: 1.6; font-size: 1rem; color: #333;">
+                @Meal.StrInstructions
+            </p>
+        </div>
+
+        <!-- Back Button -->
+        <button @onclick="NavigateBack" style="margin-top: 20px; padding: 10px 15px; 
+                background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Back to Meals
+        </button>
+    </div>
+}
+else
+{
+    <p style="text-align: center;">Loading recipe details...</p>
+}
+
+@code {
+    [Parameter] public string MealId { get; set; } = string.Empty;
+    private Meal? Meal { get; set; }
+    private List<string> Ingredients { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(MealId))
+        {
+            var response = await MealService.GetMealById(MealId);
+            Meal = response?.Meals?.FirstOrDefault();
+
+            if (Meal != null)
+            {
+                LoadIngredients();
+            }
+        }
+    }
+
+    private void LoadIngredients()
+    {
+        Ingredients.Clear();
+        for (int i = 1; i <= 20; i++)
+        {
+            var ingredient = (string?)Meal.GetType().GetProperty($"StrIngredient{i}")?.GetValue(Meal);
+            var measure = (string?)Meal.GetType().GetProperty($"StrMeasure{i}")?.GetValue(Meal);
+
+            if (!string.IsNullOrEmpty(ingredient) && !string.IsNullOrEmpty(measure))
+            {
+                Ingredients.Add($"{measure} {ingredient}");
+            }
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

@@ -1,0 +1,68 @@
+@page "/index"
+
+@inject NavigationManager NavigationManager
+@inject MealService MealService
+
+<h3>Meal Search</h3>
+
+<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+    <input @bind="SearchTerm" placeholder="Search for meals..." />
+    <button @onclick="SearchMeals">Search</button>
+    <select @bind="SortOrder">
+        <option value="asc">Sort by Title (A-Z)</option>
+        <option value="desc">Sort by Title (Z-A)</option>
+    </select>
+</div>
+
+@if (Meals != null && Meals.Any())
+{
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        @foreach (var meal in Meals)
+        {
+            <div class="meal-card" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; cursor: pointer;"
+                 @onclick="() => NavigateToMeal(meal.IdMeal)">
+                <img src="@meal.StrMealThumb" alt="@meal.StrMeal" style="width: 100%; height: auto; border-radius: 5px;" />
+                <h4 style="margin-top: 10px;">@meal.StrMeal</h4>
+            </div>
+        }
+    </div>
+}
+else if (Meals != null && !Meals.Any())
+{
+    <p>No meals found. Try searching again!</p>
+}
+else
+{
+    <p>Enter a keyword to search for meals.</p>
+}
+
+@code {
+    private string SearchTerm { get; set; } = string.Empty;
+    private string SortOrder { get; set; } = "asc";
+    private List<Meal> Meals { get; set; } = new();
+
+    private async Task SearchMeals()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            var response = await MealService.SearchMealByName(SearchTerm);
+            Meals = response?.Meals ?? new List<Meal>();
+            SortMeals();
+        }
+    }
+
+    private void SortMeals()
+    {
+        Meals = SortOrder == "asc"
+            ? Meals.OrderBy(m => m.StrMeal).ToList()
+            : Meals.OrderByDescending(m => m.StrMeal).ToList();
+    }
+
+    private void NavigateToMeal(string mealId)
+    {
+        if (!string.IsNullOrEmpty(mealId))
+        {
+            NavigationManager.NavigateTo($"/meal-detail/{mealId}");
+        }
+    }
+}
